@@ -7,13 +7,15 @@ sys.path.insert(0, 'd:/VS_projects/nospoon')
 
 from core.compiler import compile_text
 from core.transcoder import encode_to_bin, decode_from_bin
+from core.interpreter import run_bf, BrainfuckError
 
 
 def main():
     if len(sys.argv) < 2:
         print("Использование:")
         print("  python cli.py encode \"текст\"     — закодировать текст в .bin")
-        print("  python cli.py decode file.bin    — декодировать .bin в BF код")
+        print("  python cli.py decode file.bin    — декодировать .bin → текст")
+        print("  python cli.py run file.bin       — выполнить .bin и вывести текст")
         return
 
     command = sys.argv[1]
@@ -38,7 +40,6 @@ def main():
         print(binary.hex())
         print()
 
-        # сохранить в файл
         filename = 'message.bin'
         with open(filename, 'wb') as f:
             f.write(binary)
@@ -61,6 +62,30 @@ def main():
         bf_code = decode_from_bin(binary)
         print(f"Brainfuck ({len(bf_code)} символов):")
         print(bf_code[:80] + ('...' if len(bf_code) > 80 else ''))
+
+    elif command == 'run':
+        if len(sys.argv) < 3:
+            print("Укажи файл: python cli.py run message.bin")
+            return
+
+        filename = sys.argv[2]
+        if not os.path.exists(filename):
+            print(f"Файл не найден: {filename}")
+            return
+
+        with open(filename, 'rb') as f:
+            binary = f.read()
+
+        print(f"Выполняю {filename}...")
+        print()
+
+        try:
+            bf_code = decode_from_bin(binary)
+            result = run_bf(bf_code)
+            print(f"Результат:")
+            print(result)
+        except BrainfuckError as e:
+            print(f"Ошибка выполнения: {e}")
 
 
 if __name__ == "__main__":
