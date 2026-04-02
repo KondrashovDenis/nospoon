@@ -3,19 +3,28 @@
 
 import sys
 import os
+import time
 sys.path.insert(0, 'd:/VS_projects/nospoon')
 
 from core.compiler import compile_text
 from core.transcoder import encode_to_bin, decode_from_bin
 from core.interpreter import run_bf, BrainfuckError
+from core.ttl import wrap_simple, get_stdin_token
+
+TTL_OPTIONS = {
+    '1h':  3600,
+    '6h':  21600,
+    '24h': 86400,
+    '7d':  604800,
+}
 
 
 def main():
     if len(sys.argv) < 2:
         print("Использование:")
-        print("  python cli.py encode \"текст\"     — закодировать текст в .bin")
-        print("  python cli.py decode file.bin    — декодировать .bin → текст")
-        print("  python cli.py run file.bin       — выполнить .bin и вывести текст")
+        print("  python cli.py encode \"текст\" [ttl]  — закодировать (ttl: 1h/6h/24h/7d)")
+        print("  python cli.py decode file.bin       — показать BF код")
+        print("  python cli.py run file.bin          — выполнить и вывести текст")
         return
 
     command = sys.argv[1]
@@ -26,16 +35,22 @@ def main():
             return
 
         text = sys.argv[2]
+        ttl_key = sys.argv[3] if len(sys.argv) > 3 else '24h'
+        ttl_seconds = TTL_OPTIONS.get(ttl_key, 86400)
+
         print(f"Входной текст:  {text!r}")
-        print(f"ASCII значения: {[ord(c) for c in text]}")
+        print(f"TTL:            {ttl_key} ({ttl_seconds} сек)")
         print()
 
         bf_code = compile_text(text)
-        print(f"Brainfuck ({len(bf_code)} символов):")
-        print(bf_code[:80] + ('...' if len(bf_code) > 80 else ''))
+        bf_with_ttl, expires_at = wrap_simple(bf_code, ttl_seconds)
+
+        print(f"Brainfuck без TTL  ({len(bf_code)} символов)")
+        print(f"Brainfuck с TTL    ({len(bf_with_ttl)} символов)")
+        print(f"Истекает:          {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(expires_at))}")
         print()
 
-        binary = encode_to_bin(bf_code)
+        binary = encode_to_bin(bf_with_ttl)
         print(f"Spoon .bin ({len(binary)} байт):")
         print(binary.hex())
         print()
@@ -81,9 +96,13 @@ def main():
 
         try:
             bf_code = decode_from_bin(binary)
-            result = run_bf(bf_code)
-            print(f"Результат:")
-            print(result)
+            stdin_token = get_stdin_token()
+            result = run_bf(bf_code, stdin=stdin_token)
+            if result:
+                print(f"Результат:")
+                print(result)
+            else:
+                print("Сообщение недоступно (TTL истёк или неверный токен)")
         except BrainfuckError as e:
             print(f"Ошибка выполнения: {e}")
 
