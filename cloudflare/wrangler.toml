@@ -1,0 +1,7 @@
+name = "spoon-messenger-relay"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[[kv_namespaces]]
+binding = "SPOON_KV"
+id = "bd4941674ea747a29f490e7c16bd07b6"

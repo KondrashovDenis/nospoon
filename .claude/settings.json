@@ -8,7 +8,12 @@
       "Bash(python -m pytest tests/test_transcoder.py -v)",
       "Bash(python -m pytest tests/test_interpreter.py -v)",
       "Bash(python -m pytest tests/test_ttl.py -v)",
-      "Bash(python -m pytest tests/ -v)"
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(npm --version)",
+      "Bash(wrangler --version)",
+      "Bash(npx wrangler:*)",
+      "Bash(npm install:*)",
+      "Bash(wrangler whoami:*)"
     ]
   }
 }
