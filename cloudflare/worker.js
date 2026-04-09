@@ -45,6 +45,12 @@ export default {
         return await handleStats(request, env);
       }
 
+      // POST /track/download — увеличить счётчик загрузок
+      if (request.method === 'POST' && path === '/track/download') {
+        await incrementStats(env, 'downloads');
+        return jsonResponse({ success: true });
+      }
+
       // DELETE /circle/:key/cid/:cid
       if (request.method === 'DELETE' && path.match(/^\/circle\/[^/]+\/cid\/[^/]+$/)) {
         return await handleDelete(request, env, path);
@@ -110,8 +116,14 @@ async function handleFeed(request, env, path) {
 async function handleStats(request, env) {
   const stats = await env.SPOON_KV.get('stats', 'json') || {};
 
+  // подсчёт активных boards по ключам circle:*
+  const list = await env.SPOON_KV.list({ prefix: 'circle:' });
+  const boards = list.keys.length;
+
   return jsonResponse({
     total_messages: stats.total_messages || 0,
+    boards: boards,
+    downloads: stats.downloads || 0,
     updated_at: Date.now(),
   });
 }
