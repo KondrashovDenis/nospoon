@@ -4,3 +4,15 @@ __pycache__/
 .pytest_cache/
 *.bin
 message.bin
+
+# Claude local settings
+.claude/
+
+# Working notes (local only)
+STATUS_*.md
+NOTES_*.md
+
+# Local resources (not part of the codec)
+VT323/
+VT323.zip
+Web Art/
